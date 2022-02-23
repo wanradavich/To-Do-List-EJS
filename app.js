@@ -2,43 +2,54 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const { get } = require("express/lib/response");
+const res = require("express/lib/response");
+const req = require("express/lib/request");
 
 const app = express();
 
+let items =["Buy Food", "Cook Food", "Eat Food"];
+let workItems =[];
 app.set('view engine', 'ejs');
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static("public"));
 
 app.get("/", function(req, res){
     var today = new Date();
-    var currentDay = today.getDay();
-    var day = "";
+    var options = {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+    };
+    var day = today.toLocaleDateString("en-US", options);
 
-    switch (currentDay) {
-        case 0:
-            day = "Sunday, go to sleep"
-            break;
-            case 1:
-                day = "Monday, Let's go"
-                break;
-                case 2:
-                    day = "Tuesday, and you're now blessed by Lord Tuesday"
-                    break;
-                    case 3:
-                        day = "Wednessday, hey hey heyy"
-                        break;
-                        case 4:
-                            day = "Thursday, and it looks good on you"
-                            break;
-                            case 5:
-                                day = "Friday, yay yay yay"
-                                break;
-                                case 6:
-                                    day = "Saturday, and Saturday loves you too"
-                                    break;
-                                    default:
-                                        console.log("Error, current day is equal to" + currentDay);
-    }
+    res.render("list", {listTitle: day, newListItems: items});
+});
 
-    res.render("list", {kindOfDay: day});
+app.post("/", function(req, res){
+    let item = req.body.newItem;
+   if (req.body.list === "Work"){
+       workItems.push(item);
+       res.redirect("/work");
+   } else {
+    items.push(item); 
+    res.redirect("/");
+   };
+});
+
+app.get("/work", function (req, res) {
+    res.render("list", {listTitle: "Work List", newListItems: workItems});
+});
+
+app.post("/work", function (res, req) {
+    let item = req.body.newItem;
+    workItems.push(item);
+    res.redirect("/work");
+});
+
+app.get("/about", function(req, res){
+    res.render("about");
 });
 
 app.listen(3000, function(){
